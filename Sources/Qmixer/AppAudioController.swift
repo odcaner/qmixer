@@ -64,6 +64,8 @@ final class AppAudio: ObservableObject, Identifiable {
 @MainActor
 final class AppAudioController: ObservableObject {
     @Published private(set) var apps: [AppAudio] = []
+    /// Sabitlenen uygulamalar (bundle ID), görüntülenme sırasıyla. Çalışmayanlar da sırasını korur.
+    @Published private(set) var pinned: [String] = UserDefaults.standard.stringArray(forKey: "pinnedApps") ?? []
 
     /// Uygulama kapanıp açılınca ayarlar korunsun diye kaybolanları da tutarız.
     private var store: [String: AppAudio] = [:]
@@ -117,11 +119,51 @@ final class AppAudioController: ObservableObject {
             app.stop()
         }
 
-        visible.sort {
+        publish(visible)
+    }
+
+    /// Sabitlenenler kendi sıralarıyla üstte; diğerleri önce çalanlar, sonra ada göre.
+    private func publish(_ visible: [AppAudio]) {
+        let pinnedVisible = pinned.compactMap { id in visible.first { $0.id == id } }
+        let others = visible.filter { !pinned.contains($0.id) }.sorted {
             if $0.isPlaying != $1.isPlaying { return $0.isPlaying }
             return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
         }
-        if visible.map(\.id) != apps.map(\.id) { apps = visible }
+        let ordered = pinnedVisible + others
+        if ordered.map(\.id) != apps.map(\.id) { apps = ordered }
+    }
+
+    // MARK: - Sabitleme
+
+    var pinnedApps: [AppAudio] { apps.filter { pinned.contains($0.id) } }
+    var otherApps: [AppAudio] { apps.filter { !pinned.contains($0.id) } }
+
+    func isPinned(_ id: String) -> Bool { pinned.contains(id) }
+
+    /// Yeni sabitlenen, sabitlenenlerin en altına eklenir.
+    func togglePin(_ id: String) {
+        if let i = pinned.firstIndex(of: id) { pinned.remove(at: i) } else { pinned.append(id) }
+        savePinned()
+    }
+
+    /// `id`'yi `target`'ın yerine taşır (sürükle-bırak).
+    func movePinned(_ id: String, to target: String) {
+        guard id != target, let from = pinned.firstIndex(of: id), let to = pinned.firstIndex(of: target) else { return }
+        // Aşağı taşırken hedefin altına, yukarı taşırken üstüne düşer.
+        pinned.insert(pinned.remove(at: from), at: to)
+        savePinned()
+    }
+
+    /// Görünen sabitlenenler arasında bir yukarı (-1) / aşağı (+1) taşır.
+    func movePinned(_ id: String, by delta: Int) {
+        let visible = pinnedApps.map(\.id)
+        guard let i = visible.firstIndex(of: id), visible.indices.contains(i + delta) else { return }
+        movePinned(id, to: visible[i + delta])
+    }
+
+    private func savePinned() {
+        UserDefaults.standard.set(pinned, forKey: "pinnedApps")
+        publish(apps)
     }
 
     // MARK: - Süreç → uygulama

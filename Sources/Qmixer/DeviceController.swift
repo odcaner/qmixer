@@ -6,6 +6,49 @@ struct AudioDevice: Identifiable, Hashable {
     let id: AudioObjectID
     let uid: String
     let name: String
+    let symbol: String      // SF Symbol
+    let kind: String        // "Bluetooth", "USB", ...
+
+    init(id: AudioObjectID, uid: String, name: String, isInput: Bool) {
+        self.id = id
+        self.uid = uid
+        self.name = name
+        let transport: UInt32 = CA.get(id, propAddr(kAudioDevicePropertyTransportType)) ?? 0
+        let lower = name.lowercased()
+        let headset = ["headphone", "kulaklık", "headset", "earpods", "buds", "beats"].contains { lower.contains($0) }
+
+        switch transport {
+        case kAudioDeviceTransportTypeBuiltIn:
+            kind = "Dahili"
+            symbol = isInput ? "mic" : headset ? "headphones" : "laptopcomputer"
+        case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE:
+            kind = "Bluetooth"
+            symbol = lower.contains("airpods max") ? "airpods.max"
+                : lower.contains("airpods pro") ? "airpods.pro"
+                : lower.contains("airpods") ? "airpods"
+                : lower.contains("iphone") ? "iphone"
+                : headset ? "headphones" : "hifispeaker"
+        case kAudioDeviceTransportTypeUSB:
+            kind = "USB"
+            symbol = headset ? "headphones" : isInput ? "music.mic" : "hifispeaker"
+        case kAudioDeviceTransportTypeHDMI:
+            kind = "HDMI"; symbol = "tv"
+        case kAudioDeviceTransportTypeDisplayPort:
+            kind = "DisplayPort"; symbol = "display"
+        case kAudioDeviceTransportTypeAirPlay:
+            kind = "AirPlay"; symbol = "airplay.audio"
+        case kAudioDeviceTransportTypeThunderbolt:
+            kind = "Thunderbolt"; symbol = isInput ? "music.mic" : "hifispeaker"
+        case kAudioDeviceTransportTypeContinuityCaptureWired, kAudioDeviceTransportTypeContinuityCaptureWireless:
+            kind = "Süreklilik"; symbol = "iphone"
+        case kAudioDeviceTransportTypeAggregate, kAudioDeviceTransportTypeAutoAggregate:
+            kind = "Birleşik"; symbol = "square.stack.3d.up"
+        case kAudioDeviceTransportTypeVirtual:
+            kind = "Sanal"; symbol = "waveform"
+        default:
+            kind = ""; symbol = isInput ? "mic" : "speaker.wave.2"
+        }
+    }
 }
 
 /// Sistem ses giriş/çıkış cihazlarını listeler; varsayılan cihazı, ses seviyesini ve sessizi yönetir.
@@ -49,9 +92,12 @@ final class DeviceController: ObservableObject {
             guard let uid = CA.string(id, propAddr(kAudioDevicePropertyDeviceUID)),
                   !uid.hasPrefix(ProcessTap.uidPrefix) else { continue }
             let name = CA.string(id, propAddr(kAudioObjectPropertyName)) ?? uid
-            let dev = AudioDevice(id: id, uid: uid, name: name)
-            if Self.hasStreams(id, kAudioObjectPropertyScopeOutput) { outs.append(dev) }
-            if Self.hasStreams(id, kAudioObjectPropertyScopeInput) { ins.append(dev) }
+            if Self.hasStreams(id, kAudioObjectPropertyScopeOutput) {
+                outs.append(AudioDevice(id: id, uid: uid, name: name, isInput: false))
+            }
+            if Self.hasStreams(id, kAudioObjectPropertyScopeInput) {
+                ins.append(AudioDevice(id: id, uid: uid, name: name, isInput: true))
+            }
         }
         outputs = outs
         inputs = ins
