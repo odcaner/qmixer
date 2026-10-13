@@ -1,0 +1,24 @@
+QMIXER KURULUMU
+===============
+
+Gereksinim: macOS 14.2 (Sonoma) veya üstü. Apple Silicon ve Intel Mac'lerde çalışır.
+
+1. Qmixer'ı Applications klasörüne sürükleyin.
+
+2. İlk açılış: Qmixer App Store dışından dağıtıldığı ve Apple tarafından
+   onaylanmadığı (notarize edilmediği) için macOS ilk açılışta engeller.
+   Aşağıdaki yollardan birini kullanın:
+
+   a) Qmixer'ı bir kez açmayı deneyin, uyarıyı "Bitti" ile kapatın.
+      Sistem Ayarları > Gizlilik ve Güvenlik sayfasının altında
+      "Qmixer engellendi" satırındaki "Yine de Aç" düğmesine basın.
+
+   b) Ya da Terminal'de:
+        xattr -dr com.apple.quarantine /Applications/Qmixer.app
+
+3. Qmixer menü çubuğunda (sağ üst) görünür, Dock'ta görünmez.
+
+4. Bir uygulamanın sesini ilk kez kıstığınızda macOS ses erişimi izni ister.
+   İzin verin. Ses kaydedilmez, yalnızca seviyesi değiştirilir.
+
+Girişte otomatik başlar. Menünün altındaki "Girişte başlat" kutusuyla kapatılabilir.
