@@ -6,9 +6,9 @@ enum PanelSection: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .output: "Çıkış"
-        case .input: "Giriş"
-        case .apps: "Uygulamalar"
+        case .output: L("Çıkış")
+        case .input: L("Giriş")
+        case .apps: L("Uygulamalar")
         }
     }
     var symbol: String {
@@ -25,8 +25,8 @@ enum AppSort: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .playingFirst: "Ses çalanlar önce"
-        case .name: "Ada göre"
+        case .playingFirst: L("Ses çalanlar önce")
+        case .name: L("Ada göre")
         }
     }
 }
@@ -36,13 +36,13 @@ enum MenuIcon: String, CaseIterable, Identifiable {
     var id: String { rawValue }
     var title: String {
         switch self {
-        case .sliders: "Kaydırıcılar"
-        case .slidersHorizontal: "Yatay kaydırıcılar"
-        case .dynamicSpeaker: "Hoparlör (ses seviyesine göre)"
-        case .waveform: "Dalga"
-        case .dial: "Düğme"
-        case .headphones: "Kulaklık"
-        case .note: "Nota"
+        case .sliders: L("Kaydırıcılar")
+        case .slidersHorizontal: L("Yatay kaydırıcılar")
+        case .dynamicSpeaker: L("Hoparlör (ses seviyesine göre)")
+        case .waveform: L("Dalga")
+        case .dial: L("Düğme")
+        case .headphones: L("Kulaklık")
+        case .note: L("Nota")
         }
     }
     /// Önizleme ve sabit simgeler için.

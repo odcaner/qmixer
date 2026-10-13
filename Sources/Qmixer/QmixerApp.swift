@@ -9,6 +9,7 @@ struct QmixerApp: App {
     @StateObject private var prefs = Prefs.shared
 
     init() {
+        _ = AppLanguage.atLaunch
         if Prefs.shared.placeNextToWiFi { MenuBarPlacement.placeNextToWiFi() }
         let d = DeviceController()
         _devices = StateObject(wrappedValue: d)

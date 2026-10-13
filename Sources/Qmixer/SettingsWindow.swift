@@ -10,7 +10,7 @@ enum SettingsWindow {
         if window == nil {
             let host = NSHostingController(rootView: SettingsView(devices: devices, apps: apps, login: login, initialTab: tab))
             let w = NSWindow(contentViewController: host)
-            w.title = "Qmixer Ayarları"
+            w.title = L("Qmixer Ayarları")
             w.styleMask = [.titled, .closable, .miniaturizable]
             w.isReleasedWhenClosed = false
             w.center()
@@ -64,12 +64,24 @@ private struct GeneralTab: View {
     @ObservedObject var apps: AppAudioController
     @ObservedObject private var prefs = Prefs.shared
     @StateObject private var confirmReset = Box(false)
+    @StateObject private var language = Box(AppLanguage.override)
     private let placementAtLaunch = Prefs.shared.placeNextToWiFi
 
     var body: some View {
         Form {
             Section {
                 Toggle("Girişte başlat", isOn: Binding(get: { login.enabled }, set: login.set))
+                Picker("Dil", selection: Binding(get: { language.v }, set: { language.v = $0; AppLanguage.override = $0 })) {
+                    Text("Sistem").tag("")
+                    ForEach(AppLanguage.options, id: \.code) { Text(verbatim: $0.name).tag($0.code) }
+                }
+                if language.v != AppLanguage.atLaunch {
+                    HStack {
+                        Text("Yeniden başlatınca geçerli olur.").font(.caption).foregroundStyle(.secondary)
+                        Spacer()
+                        Button("Şimdi yeniden başlat") { SettingsWindow.relaunch() }
+                    }
+                }
             }
 
             Section("Menü çubuğu simgesi") {
@@ -80,7 +92,7 @@ private struct GeneralTab: View {
                     }
                 }
                 .padding(.vertical, 4)
-                Text(prefs.menuIcon.title + ". Ses kapalıyken simge her zaman üstü çizili hoparlöre döner.")
+                Text(prefs.menuIcon.title + ". " + L("Ses kapalıyken simge her zaman üstü çizili hoparlöre döner."))
                     .font(.caption).foregroundStyle(.secondary)
             }
 
@@ -109,7 +121,7 @@ private struct GeneralTab: View {
                 HStack {
                     Text("Uygulama ses seviyeleri")
                     Spacer()
-                    Button("Tümünü %100 yap…") { confirmReset.v = true }
+                    Button(L("Tümünü %100 yap…")) { confirmReset.v = true }
                 }
             }
 
@@ -192,7 +204,7 @@ private struct AppearanceTab: View {
             }
 
             Section {
-                Toggle("%25 · %50 · %75 · %100 dilimlerini göster", isOn: $prefs.showVolumeStops)
+                Toggle(L("%25 · %50 · %75 · %100 dilimlerini göster"), isOn: $prefs.showVolumeStops)
                 Toggle("Sürüklerken dilimlere yapış", isOn: $prefs.snapToStops)
             } header: {
                 Text("Ses kaydırıcısı")
@@ -213,7 +225,7 @@ private struct LabeledSlider: View {
 
     var body: some View {
         HStack {
-            Text(title)
+            Text(L(title))
             // `step:` macOS'ta sık çentik çiziyor; adımı bağlamada yuvarlıyoruz.
             Slider(value: Binding(get: { value }, set: { value = ($0 / step).rounded() * step }), in: range)
             Text("\(Int(value)) pt")
@@ -375,7 +387,7 @@ private struct DevicesTab: View {
                 }
             }
         } header: {
-            Text(title)
+            Text(L(title))
         } footer: {
             if footer {
                 Text("Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder).")

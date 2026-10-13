@@ -15,7 +15,7 @@ func propAddr(_ selector: AudioObjectPropertySelector,
 struct CoreAudioError: LocalizedError {
     let what: String
     let status: OSStatus
-    var errorDescription: String? { "\(what) başarısız (OSStatus \(status))" }
+    var errorDescription: String? { String(format: L("%@ başarısız (OSStatus %d)"), L(what), Int(status)) }
 }
 
 func check(_ status: OSStatus, _ what: String) throws {

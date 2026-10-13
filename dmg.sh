@@ -11,7 +11,7 @@ trap 'rm -rf "$STAGE"' EXIT
 
 cp -R dist/Qmixer.app "$STAGE/"
 ln -s /Applications "$STAGE/Applications"
-cp "KURULUM.txt" "$STAGE/KURULUM.txt"
+cp KURULUM.txt INSTALL.txt "$STAGE/"
 
 rm -f "$DMG"
 hdiutil create -volname "Qmixer $VERSION" -srcfolder "$STAGE" -fs HFS+ -format UDZO -ov "$DMG" >/dev/null

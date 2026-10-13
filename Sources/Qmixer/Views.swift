@@ -53,14 +53,14 @@ struct MixerView: View {
         switch section {
         case .output:
             DeviceCard(
-                title: "ÇIKIŞ", icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
+                title: "Çıkış", icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
                 list: devices.outputs, selected: devices.defaultOutput, select: devices.setDefaultOutput,
                 hasVolume: devices.outputHasVolume,
                 volume: Binding(get: { devices.outputVolume }, set: devices.setOutputVolume),
                 muted: Binding(get: { devices.outputMuted }, set: devices.setOutputMuted))
         case .input:
             DeviceCard(
-                title: "GİRİŞ", icon: "mic.fill", mutedIcon: "mic.slash.fill",
+                title: "Giriş", icon: "mic.fill", mutedIcon: "mic.slash.fill",
                 list: devices.inputs, selected: devices.defaultInput, select: devices.setDefaultInput,
                 hasVolume: devices.inputHasVolume,
                 volume: Binding(get: { devices.inputVolume }, set: devices.setInputVolume),
@@ -73,8 +73,8 @@ struct MixerView: View {
     @ViewBuilder
     private var appList: some View {
         if apps.apps.isEmpty {
-            SectionLabel(title: "UYGULAMALAR")
-            Text(prefs.onlyPlaying ? "Şu an ses çalan uygulama yok." : "Ses kullanan uygulama yok.")
+            SectionLabel(title: "Uygulamalar")
+            Text(L(prefs.onlyPlaying ? "Şu an ses çalan uygulama yok." : "Ses kullanan uygulama yok."))
                 .foregroundStyle(.secondary).font(.callout)
         } else {
             ScrollView {
@@ -82,14 +82,14 @@ struct MixerView: View {
                     let pinned = apps.pinnedApps
                     let others = apps.otherApps
                     if !pinned.isEmpty {
-                        SectionLabel(title: "SABİTLENENLER", symbol: "pin.fill")
+                        SectionLabel(title: "Sabitlenenler", symbol: "pin.fill")
                         ForEach(pinned) { app in
                             AppRow(app: app, controller: apps, dragging: $dragBox.v)
                                 .onDrop(of: [.text], delegate: PinDropDelegate(target: app.id, controller: apps, dragging: $dragBox.v))
                         }
                     }
                     if !others.isEmpty {
-                        SectionLabel(title: pinned.isEmpty ? "UYGULAMALAR" : "DİĞER")
+                        SectionLabel(title: pinned.isEmpty ? "Uygulamalar" : "Diğer")
                             .padding(.top, pinned.isEmpty ? 0 : 8)
                         ForEach(others) { AppRow(app: $0, controller: apps, dragging: $dragBox.v) }
                     }
@@ -112,7 +112,7 @@ struct SectionLabel: View {
     var body: some View {
         HStack(spacing: 4) {
             if let symbol { Image(systemName: symbol).font(.system(size: 8, weight: .bold)) }
-            Text(title).font(.system(size: 10, weight: .semibold)).tracking(0.6)
+            Text(L(title).uppercased(with: uiLocale)).font(.system(size: 10, weight: .semibold)).tracking(0.6)
         }
         .foregroundStyle(.secondary)
     }
@@ -150,7 +150,7 @@ struct DeviceCard: View {
                     HStack(spacing: 10) {
                         DeviceIcon(symbol: current?.symbol ?? icon, active: true, size: 28)
                         VStack(alignment: .leading, spacing: 1) {
-                            Text(current?.name ?? "Cihaz yok")
+                            Text(current?.name ?? L("Cihaz yok"))
                                 .font(.system(size: 13, weight: .medium))
                                 .lineLimit(1)
                             if prefs.showDeviceKind, let kind = current?.kind, !kind.isEmpty {
@@ -288,7 +288,7 @@ struct AppRow: View {
             if $0, dragging != nil, NSEvent.pressedMouseButtons == 0 { dragging = nil }
         }
         .contextMenu {
-            Button(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle") {
+            Button(L(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle")) {
                 withAnimation(.snappy(duration: 0.2)) { controller.togglePin(app.id) }
             }
             if pinned {
@@ -298,7 +298,7 @@ struct AppRow: View {
             }
             Divider()
             ForEach(VolumeSlider.stops, id: \.self) { stop in
-                Button("Ses %\(Int(stop * 100))") {
+                Button(String(format: L("Ses %@"), percentText(Int(stop * 100)))) {
                     app.volume = stop
                     app.muted = false
                 }
@@ -370,7 +370,7 @@ struct AppRow: View {
         }
         .buttonStyle(.plain)
         .opacity(pinned || hover ? 1 : 0)
-        .help(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle")
+        .help(L(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle"))
     }
 }
 
@@ -428,12 +428,12 @@ struct VolumeControl: View {
                     .frame(width: 20)
             }
             .buttonStyle(.plain)
-            .help(muted ? "Sesi aç" : "Sustur")
+            .help(L(muted ? "Sesi aç" : "Sustur"))
 
             VolumeSlider(value: $volume, dimmed: muted)
 
             if prefs.showPercent {
-                Text("\(Int((volume * 100).rounded()))%")
+                Text(percentText(Int((volume * 100).rounded())))
                     .font(.caption.monospacedDigit())
                     .foregroundStyle(muted ? .secondary : .primary)
                     .frame(width: 36, alignment: .trailing)
@@ -502,7 +502,7 @@ struct VolumeSlider: View {
         .opacity(isEnabled ? 1 : 0.5)
         .accessibilityElement()
         .accessibilityLabel("Ses seviyesi")
-        .accessibilityValue("%\(Int((value * 100).rounded()))")
+        .accessibilityValue(percentText(Int((value * 100).rounded())))
         .accessibilityAdjustableAction { direction in
             switch direction {
             case .increment: value = min(1, value + 0.05)

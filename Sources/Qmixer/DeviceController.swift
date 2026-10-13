@@ -19,7 +19,7 @@ struct AudioDevice: Identifiable, Hashable {
 
         switch transport {
         case kAudioDeviceTransportTypeBuiltIn:
-            kind = "Dahili"
+            kind = L("Dahili")
             symbol = isInput ? "mic" : headset ? "headphones" : "laptopcomputer"
         case kAudioDeviceTransportTypeBluetooth, kAudioDeviceTransportTypeBluetoothLE:
             kind = "Bluetooth"
@@ -40,11 +40,11 @@ struct AudioDevice: Identifiable, Hashable {
         case kAudioDeviceTransportTypeThunderbolt:
             kind = "Thunderbolt"; symbol = isInput ? "music.mic" : "hifispeaker"
         case kAudioDeviceTransportTypeContinuityCaptureWired, kAudioDeviceTransportTypeContinuityCaptureWireless:
-            kind = "Süreklilik"; symbol = "iphone"
+            kind = L("Süreklilik"); symbol = "iphone"
         case kAudioDeviceTransportTypeAggregate, kAudioDeviceTransportTypeAutoAggregate:
-            kind = "Birleşik"; symbol = "square.stack.3d.up"
+            kind = L("Birleşik"); symbol = "square.stack.3d.up"
         case kAudioDeviceTransportTypeVirtual:
-            kind = "Sanal"; symbol = "waveform"
+            kind = L("Sanal"); symbol = "waveform"
         default:
             kind = ""; symbol = isInput ? "mic" : "speaker.wave.2"
         }

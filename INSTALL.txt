@@ -1,0 +1,25 @@
+QMIXER INSTALLATION
+===================
+
+Requires macOS 14.2 (Sonoma) or later. Runs on Apple Silicon and Intel Macs.
+Languages: English, Türkçe, Français, Español, Русский, 日本語, 简体中文
+(follows the system language; can be changed in Settings › General).
+
+1. Drag Qmixer into the Applications folder.
+
+2. First launch: Qmixer is distributed outside the App Store and is not
+   notarized by Apple, so macOS blocks it the first time. Either:
+
+   a) Try to open Qmixer once and dismiss the warning with "Done".
+      Then open System Settings › Privacy & Security, scroll down and
+      click "Open Anyway" next to "Qmixer was blocked".
+
+   b) Or run in Terminal:
+        xattr -dr com.apple.quarantine /Applications/Qmixer.app
+
+3. Qmixer lives in the menu bar (top right); it does not appear in the Dock.
+
+4. The first time you lower an app's volume, macOS asks for audio access.
+   Allow it. No audio is recorded; only its level is changed.
+
+Qmixer launches at login. You can turn this off in Settings › General.

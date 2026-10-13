@@ -1,0 +1,1 @@
+"NSAudioCaptureUsageDescription" = "Qmixer needs access to app audio so it can lower or mute each app individually. No audio is recorded.";

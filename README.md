@@ -4,7 +4,12 @@ macOS menü çubuğu ses mikseri: her uygulamanın sesini ayrı ayrı kısın ve
 giriş/çıkış cihazlarını tek yerden yönetin.
 
 - Uygulama başına ses seviyesi ve sessiz (ayarlar kalıcı)
-- Çıkış/giriş cihazı seçimi, cihaz sesi ve sessiz
+- %25 / %50 / %75 / %100 dilimli, dilimlere yapışan kaydırıcılar (⌥ ile serbest)
+- Uygulamaları üste sabitleme, sürükle-bırak ile sıralama, listeden gizleme
+- Çıkış/giriş cihazı seçimi (Denetim Merkezi tarzı), cihaz sesi ve sessiz
+- Ayarlar: bölüm sırası/görünürlüğü, panel boyutu, kompakt mod, menü çubuğu simgesi,
+  cihaz gizleme, dil
+- Diller: Türkçe, English, Français, Español, Русский, 日本語, 简体中文
 - Dock'ta görünmez, menü çubuğunda Wi-Fi'ın soluna yerleşir
 - Girişte otomatik başlar
 
@@ -31,6 +36,9 @@ Xcode gerekmez, Command Line Tools yeterli.
 ```
 
 Sürüm numarası `Resources/Info.plist` içindeki `CFBundleShortVersionString`.
+
+Çeviriler `Resources/<dil>.lproj/Localizable.strings` içinde; anahtarlar Türkçe kaynak metinlerdir.
+Test için: `open -n dist/Qmixer.app --args -AppleLanguages "(ja)" --panel` (veya `--settings 0-3`).
 
 ## Nasıl çalışır
 
