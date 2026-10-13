@@ -22,6 +22,17 @@ struct QmixerApp: App {
             _login = StateObject(wrappedValue: login)
             DispatchQueue.main.async { SettingsWindow.show(devices: d, apps: a, login: login, tab: tab) }
         }
+        // `--panel`: menü panelini normal pencerede aç (ekran görüntüsü / test için).
+        if args.contains("--panel") {
+            let login = LoginItem()
+            DispatchQueue.main.async {
+                let w = NSWindow(contentViewController: NSHostingController(rootView: MixerView(devices: d, apps: a, login: login)))
+                w.title = "Qmixer"
+                w.center()
+                w.makeKeyAndOrderFront(nil)
+                NSApp.activate(ignoringOtherApps: true)
+            }
+        }
     }
 
     var body: some Scene {

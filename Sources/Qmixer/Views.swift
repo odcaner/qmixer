@@ -297,6 +297,13 @@ struct AppRow: View {
                 Button("Aşağı taşı") { withAnimation { controller.movePinned(app.id, by: 1) } }
             }
             Divider()
+            ForEach(VolumeSlider.stops, id: \.self) { stop in
+                Button("Ses %\(Int(stop * 100))") {
+                    app.volume = stop
+                    app.muted = false
+                }
+            }
+            Divider()
             Button("Listeden gizle") { withAnimation { controller.hide(app.id) } }
         }
     }
@@ -423,8 +430,7 @@ struct VolumeControl: View {
             .buttonStyle(.plain)
             .help(muted ? "Sesi aç" : "Sustur")
 
-            Slider(value: $volume, in: 0...1)
-                .controlSize(.small)
+            VolumeSlider(value: $volume, dimmed: muted)
 
             if prefs.showPercent {
                 Text("\(Int((volume * 100).rounded()))%")
@@ -433,5 +439,89 @@ struct VolumeControl: View {
                     .frame(width: 36, alignment: .trailing)
             }
         }
+    }
+}
+
+/// %25/%50/%75/%100 dilimli, dilimlere yapışan ses kaydırıcısı.
+struct VolumeSlider: View {
+    static let stops: [Float] = [0.25, 0.5, 0.75, 1]
+
+    @Binding var value: Float
+    var dimmed = false
+    @ObservedObject private var prefs = Prefs.shared
+    @Environment(\.isEnabled) private var isEnabled
+    @StateObject private var dragging = Box(false)
+
+    private let knob: CGFloat = 14
+    private let track: CGFloat = 4
+    private let snapDistance: Float = 0.025
+
+    var body: some View {
+        GeometryReader { geo in
+            let usable = max(1, geo.size.width - knob)
+            let x = CGFloat(value) * usable
+
+            ZStack(alignment: .leading) {
+                Capsule()
+                    .fill(Color.primary.opacity(0.15))
+                    .frame(height: track)
+                Capsule()
+                    .fill(dimmed ? Color.secondary : Color.accentColor)
+                    .frame(width: x + knob / 2, height: track)
+
+                if prefs.showVolumeStops {
+                    ForEach(Self.stops, id: \.self) { stop in
+                        Capsule()
+                            .fill(value >= stop ? Color.white.opacity(0.75) : Color.primary.opacity(0.35))
+                            .frame(width: 2, height: 8)
+                            .offset(x: CGFloat(stop) * usable + knob / 2 - 1)
+                    }
+                }
+
+                Circle()
+                    .fill(Color.white)
+                    .overlay(Circle().strokeBorder(Color.black.opacity(0.12), lineWidth: 0.5))
+                    .shadow(color: .black.opacity(0.3), radius: 1, y: 0.5)
+                    .frame(width: knob, height: knob)
+                    .scaleEffect(dragging.v ? 1.12 : 1)
+                    .offset(x: x)
+            }
+            .frame(width: geo.size.width, height: geo.size.height)
+            .contentShape(Rectangle())
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { g in
+                        guard isEnabled else { return }
+                        if !dragging.v { withAnimation(.easeOut(duration: 0.1)) { dragging.v = true } }
+                        update(Float((g.location.x - knob / 2) / usable))
+                    }
+                    .onEnded { _ in withAnimation(.easeOut(duration: 0.1)) { dragging.v = false } }
+            )
+        }
+        .frame(height: 16)
+        .opacity(isEnabled ? 1 : 0.5)
+        .accessibilityElement()
+        .accessibilityLabel("Ses seviyesi")
+        .accessibilityValue("%\(Int((value * 100).rounded()))")
+        .accessibilityAdjustableAction { direction in
+            switch direction {
+            case .increment: value = min(1, value + 0.05)
+            case .decrement: value = max(0, value - 0.05)
+            @unknown default: break
+            }
+        }
+    }
+
+    private func update(_ raw: Float) {
+        var v = min(1, max(0, raw))
+        if prefs.snapToStops, !NSEvent.modifierFlags.contains(.option),
+           let stop = ([0] + Self.stops).first(where: { abs($0 - v) < snapDistance }) {
+            // Dilime yeni oturduysa trackpad'de hafif titreşim.
+            if value != stop {
+                NSHapticFeedbackManager.defaultPerformer.perform(.alignment, performanceTime: .now)
+            }
+            v = stop
+        }
+        if v != value { value = v }
     }
 }

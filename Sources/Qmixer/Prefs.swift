@@ -83,6 +83,8 @@ final class Prefs: ObservableObject {
     @Published var showPercent: Bool { didSet { d.set(showPercent, forKey: "showPercent") } }
     @Published var showAppIcons: Bool { didSet { d.set(showAppIcons, forKey: "showAppIcons") } }
     @Published var showDeviceKind: Bool { didSet { d.set(showDeviceKind, forKey: "showDeviceKind") } }
+    @Published var showVolumeStops: Bool { didSet { d.set(showVolumeStops, forKey: "showVolumeStops") } }
+    @Published var snapToStops: Bool { didSet { d.set(snapToStops, forKey: "snapToStops") } }
 
     // Uygulamalar
     @Published var appSort: AppSort { didSet { d.set(appSort.rawValue, forKey: "appSort") } }
@@ -109,6 +111,8 @@ final class Prefs: ObservableObject {
         showPercent = d.object(forKey: "showPercent") as? Bool ?? true
         showAppIcons = d.object(forKey: "showAppIcons") as? Bool ?? true
         showDeviceKind = d.object(forKey: "showDeviceKind") as? Bool ?? true
+        showVolumeStops = d.object(forKey: "showVolumeStops") as? Bool ?? true
+        snapToStops = d.object(forKey: "snapToStops") as? Bool ?? true
 
         appSort = AppSort(rawValue: d.string(forKey: "appSort") ?? "") ?? .playingFirst
         onlyPlaying = d.bool(forKey: "onlyPlaying")
@@ -127,6 +131,8 @@ final class Prefs: ObservableObject {
         showPercent = true
         showAppIcons = true
         showDeviceKind = true
+        showVolumeStops = true
+        snapToStops = true
     }
 }
 

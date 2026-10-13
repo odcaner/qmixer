@@ -190,6 +190,16 @@ private struct AppearanceTab: View {
                 Toggle("Uygulama simgelerini göster", isOn: $prefs.showAppIcons)
                 Toggle("Cihaz türünü göster (Bluetooth, USB…)", isOn: $prefs.showDeviceKind)
             }
+
+            Section {
+                Toggle("%25 · %50 · %75 · %100 dilimlerini göster", isOn: $prefs.showVolumeStops)
+                Toggle("Sürüklerken dilimlere yapış", isOn: $prefs.snapToStops)
+            } header: {
+                Text("Ses kaydırıcısı")
+            } footer: {
+                Text("Yapışma açıkken ⌥ (Option) tuşuna basılı tutarak ara değerleri hassas ayarlayabilirsiniz.")
+                    .font(.caption).foregroundStyle(.secondary)
+            }
         }
         .formStyle(.grouped)
     }
