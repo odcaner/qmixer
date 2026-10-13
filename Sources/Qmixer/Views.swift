@@ -54,7 +54,11 @@ struct MixerView: View {
                             ForEach(others) { AppRow(app: $0, controller: apps, dragging: $dragBox.v) }
                         }
                     }
+                    // Kaydırma çubuğu sabitleme düğmesinin üstüne binmesin: içerik çubuk kadar içeride,
+                    // ScrollView da aynı miktar dışarı taşıyor; böylece çubuk pencerenin kenar boşluğunda kalır.
+                    .padding(.trailing, 12)
                 }
+                .padding(.trailing, -12)
                 .frame(maxHeight: 400)
                 .fixedSize(horizontal: false, vertical: true)
             }
