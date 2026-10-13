@@ -12,63 +12,32 @@ struct MixerView: View {
     @ObservedObject var devices: DeviceController
     @ObservedObject var apps: AppAudioController
     @ObservedObject var login: LoginItem
+    @ObservedObject private var prefs = Prefs.shared
     @StateObject private var dragBox = Box<String?>(nil)
 
     var body: some View {
+        let sections = prefs.visibleSections
         VStack(alignment: .leading, spacing: 14) {
-            DeviceCard(
-                title: "ÇIKIŞ", icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
-                list: devices.outputs, selected: devices.defaultOutput, select: devices.setDefaultOutput,
-                hasVolume: devices.outputHasVolume,
-                volume: Binding(get: { devices.outputVolume }, set: devices.setOutputVolume),
-                muted: Binding(get: { devices.outputMuted }, set: devices.setOutputMuted))
-
-            DeviceCard(
-                title: "GİRİŞ", icon: "mic.fill", mutedIcon: "mic.slash.fill",
-                list: devices.inputs, selected: devices.defaultInput, select: devices.setDefaultInput,
-                hasVolume: devices.inputHasVolume,
-                volume: Binding(get: { devices.inputVolume }, set: devices.setInputVolume),
-                muted: Binding(get: { devices.inputMuted }, set: devices.setInputMuted))
-
-            Divider()
-
-            if apps.apps.isEmpty {
-                SectionLabel(title: "UYGULAMALAR")
-                Text("Ses kullanan uygulama yok.")
-                    .foregroundStyle(.secondary).font(.callout)
-            } else {
-                ScrollView {
-                    VStack(alignment: .leading, spacing: 4) {
-                        let pinned = apps.pinnedApps
-                        let others = apps.otherApps
-                        if !pinned.isEmpty {
-                            SectionLabel(title: "SABİTLENENLER", symbol: "pin.fill")
-                            ForEach(pinned) { app in
-                                AppRow(app: app, controller: apps, dragging: $dragBox.v)
-                                    .onDrop(of: [.text], delegate: PinDropDelegate(target: app.id, controller: apps, dragging: $dragBox.v))
-                            }
-                        }
-                        if !others.isEmpty {
-                            SectionLabel(title: pinned.isEmpty ? "UYGULAMALAR" : "DİĞER")
-                                .padding(.top, pinned.isEmpty ? 0 : 8)
-                            ForEach(others) { AppRow(app: $0, controller: apps, dragging: $dragBox.v) }
-                        }
-                    }
-                    // Kaydırma çubuğu sabitleme düğmesinin üstüne binmesin: içerik çubuk kadar içeride,
-                    // ScrollView da aynı miktar dışarı taşıyor; böylece çubuk pencerenin kenar boşluğunda kalır.
-                    .padding(.trailing, 12)
-                }
-                .padding(.trailing, -12)
-                .frame(maxHeight: 400)
-                .fixedSize(horizontal: false, vertical: true)
+            ForEach(Array(sections.enumerated()), id: \.element) { i, section in
+                // Uygulamalar bölümü cihaz kartlarından çizgiyle ayrılır.
+                if i > 0, section == .apps || sections[i - 1] == .apps { Divider() }
+                view(for: section)
+            }
+            if sections.isEmpty {
+                Text("Tüm bölümler gizli. Ayarlar › Görünüm'den açabilirsiniz.")
+                    .font(.callout).foregroundStyle(.secondary)
             }
 
             Divider()
 
             HStack {
-                Toggle("Girişte başlat", isOn: Binding(get: { login.enabled }, set: login.set))
-                    .toggleStyle(.checkbox)
-                    .font(.caption)
+                Button {
+                    SettingsWindow.show(devices: devices, apps: apps, login: login)
+                } label: {
+                    Label("Ayarlar", systemImage: "gearshape")
+                }
+                .keyboardShortcut(",")
+                .controlSize(.small)
                 Spacer()
                 Button("Çık") { NSApp.terminate(nil) }
                     .keyboardShortcut("q")
@@ -76,7 +45,63 @@ struct MixerView: View {
             }
         }
         .padding(14)
-        .frame(width: 340)
+        .frame(width: prefs.panelWidth)
+    }
+
+    @ViewBuilder
+    private func view(for section: PanelSection) -> some View {
+        switch section {
+        case .output:
+            DeviceCard(
+                title: "ÇIKIŞ", icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
+                list: devices.outputs, selected: devices.defaultOutput, select: devices.setDefaultOutput,
+                hasVolume: devices.outputHasVolume,
+                volume: Binding(get: { devices.outputVolume }, set: devices.setOutputVolume),
+                muted: Binding(get: { devices.outputMuted }, set: devices.setOutputMuted))
+        case .input:
+            DeviceCard(
+                title: "GİRİŞ", icon: "mic.fill", mutedIcon: "mic.slash.fill",
+                list: devices.inputs, selected: devices.defaultInput, select: devices.setDefaultInput,
+                hasVolume: devices.inputHasVolume,
+                volume: Binding(get: { devices.inputVolume }, set: devices.setInputVolume),
+                muted: Binding(get: { devices.inputMuted }, set: devices.setInputMuted))
+        case .apps:
+            appList
+        }
+    }
+
+    @ViewBuilder
+    private var appList: some View {
+        if apps.apps.isEmpty {
+            SectionLabel(title: "UYGULAMALAR")
+            Text(prefs.onlyPlaying ? "Şu an ses çalan uygulama yok." : "Ses kullanan uygulama yok.")
+                .foregroundStyle(.secondary).font(.callout)
+        } else {
+            ScrollView {
+                VStack(alignment: .leading, spacing: prefs.compactRows ? 1 : 4) {
+                    let pinned = apps.pinnedApps
+                    let others = apps.otherApps
+                    if !pinned.isEmpty {
+                        SectionLabel(title: "SABİTLENENLER", symbol: "pin.fill")
+                        ForEach(pinned) { app in
+                            AppRow(app: app, controller: apps, dragging: $dragBox.v)
+                                .onDrop(of: [.text], delegate: PinDropDelegate(target: app.id, controller: apps, dragging: $dragBox.v))
+                        }
+                    }
+                    if !others.isEmpty {
+                        SectionLabel(title: pinned.isEmpty ? "UYGULAMALAR" : "DİĞER")
+                            .padding(.top, pinned.isEmpty ? 0 : 8)
+                        ForEach(others) { AppRow(app: $0, controller: apps, dragging: $dragBox.v) }
+                    }
+                }
+                // Kaydırma çubuğu sabitleme düğmesinin üstüne binmesin: içerik çubuk kadar içeride,
+                // ScrollView da aynı miktar dışarı taşıyor; böylece çubuk pencerenin kenar boşluğunda kalır.
+                .padding(.trailing, 12)
+            }
+            .padding(.trailing, -12)
+            .frame(maxHeight: prefs.listMaxHeight)
+            .fixedSize(horizontal: false, vertical: true)
+        }
     }
 }
 
@@ -106,6 +131,7 @@ struct DeviceCard: View {
     @Binding var volume: Float
     @Binding var muted: Bool
 
+    @ObservedObject private var prefs = Prefs.shared
     @StateObject private var expandedBox = Box(false)
     private var expanded: Bool { get { expandedBox.v } nonmutating set { expandedBox.v = newValue } }
     @StateObject private var hoverBox = Box(false)
@@ -127,7 +153,7 @@ struct DeviceCard: View {
                             Text(current?.name ?? "Cihaz yok")
                                 .font(.system(size: 13, weight: .medium))
                                 .lineLimit(1)
-                            if let kind = current?.kind, !kind.isEmpty {
+                            if prefs.showDeviceKind, let kind = current?.kind, !kind.isEmpty {
                                 Text(kind).font(.system(size: 11)).foregroundStyle(.secondary)
                             }
                         }
@@ -147,7 +173,8 @@ struct DeviceCard: View {
                 if expanded {
                     Divider().padding(.horizontal, 8)
                     VStack(spacing: 1) {
-                        ForEach(list) { d in
+                        // Gizlenen cihazlar listede yok; ama seçiliyse görünmeye devam eder.
+                        ForEach(list.filter { prefs.hiddenDevices[$0.uid] == nil || $0.id == selected }) { d in
                             DeviceOption(device: d, selected: d.id == selected) {
                                 select(d.id)
                                 withAnimation(.snappy(duration: 0.22)) { expanded = false }
@@ -176,6 +203,7 @@ struct DeviceCard: View {
 }
 
 struct DeviceOption: View {
+    @ObservedObject private var prefs = Prefs.shared
     let device: AudioDevice
     let selected: Bool
     let action: () -> Void
@@ -188,7 +216,7 @@ struct DeviceOption: View {
                 DeviceIcon(symbol: device.symbol, active: selected, size: 22)
                 VStack(alignment: .leading, spacing: 0) {
                     Text(device.name).font(.system(size: 12.5)).lineLimit(1)
-                    if !device.kind.isEmpty {
+                    if prefs.showDeviceKind, !device.kind.isEmpty {
                         Text(device.kind).font(.system(size: 10)).foregroundStyle(.secondary)
                     }
                 }
@@ -235,6 +263,7 @@ struct AppRow: View {
     @ObservedObject var app: AppAudio
     @ObservedObject var controller: AppAudioController
     @Binding var dragging: String?
+    @ObservedObject private var prefs = Prefs.shared
     @StateObject private var hoverBox = Box(false)
     private var hover: Bool { get { hoverBox.v } nonmutating set { hoverBox.v = newValue } }
 
@@ -242,46 +271,13 @@ struct AppRow: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 6) {
-                if pinned {
-                    Image(systemName: "line.3.horizontal")
-                        .font(.system(size: 9, weight: .semibold))
-                        .foregroundStyle(.tertiary)
-                        .opacity(hover ? 1 : 0)
-                        .help("Sıralamak için sürükleyin")
-                }
-                if let icon = app.icon {
-                    Image(nsImage: icon).resizable().frame(width: 18, height: 18)
-                }
-                Text(app.name).lineLimit(1)
-                if app.isPlaying {
-                    Image(systemName: "waveform").font(.caption2).foregroundStyle(.green)
-                        .help("Şu an ses çalıyor")
-                }
-                Spacer()
-                Button { withAnimation(.snappy(duration: 0.2)) { controller.togglePin(app.id) } } label: {
-                    Image(systemName: pinned ? "pin.fill" : "pin")
-                        .font(.system(size: 10, weight: .semibold))
-                        .rotationEffect(.degrees(45))
-                        .foregroundStyle(pinned ? Color.accentColor : Color.secondary)
-                        .frame(width: 18, height: 18)
-                        .contentShape(Rectangle())
-                }
-                .buttonStyle(.plain)
-                .opacity(pinned || hover ? 1 : 0)
-                .help(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle")
-            }
-            .contentShape(Rectangle())
-            .modifier(PinDrag(enabled: pinned, id: app.id, dragging: $dragging))
-
-            VolumeControl(icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
-                          volume: $app.volume, muted: $app.muted)
+            row
             if let err = app.error {
                 Text(err).font(.caption2).foregroundStyle(.red)
             }
         }
         .padding(.horizontal, 6)
-        .padding(.vertical, 5)
+        .padding(.vertical, prefs.compactRows ? 3 : 5)
         .background(
             RoundedRectangle(cornerRadius: 8, style: .continuous)
                 .fill(Color.primary.opacity(dragging == app.id ? 0.12 : hover ? 0.05 : 0))
@@ -300,7 +296,74 @@ struct AppRow: View {
                 Button("Yukarı taşı") { withAnimation { controller.movePinned(app.id, by: -1) } }
                 Button("Aşağı taşı") { withAnimation { controller.movePinned(app.id, by: 1) } }
             }
+            Divider()
+            Button("Listeden gizle") { withAnimation { controller.hide(app.id) } }
         }
+    }
+
+    @ViewBuilder
+    private var row: some View {
+        if prefs.compactRows {
+            // Tek satır: [tutamaç simge ad] [sustur ──slider── %] [iğne]
+            HStack(spacing: 6) {
+                identity
+                    .frame(width: prefs.panelWidth * 0.3, alignment: .leading)
+                    .contentShape(Rectangle())
+                    .modifier(PinDrag(enabled: pinned, id: app.id, dragging: $dragging))
+                volume
+                pinButton
+            }
+        } else {
+            VStack(alignment: .leading, spacing: 2) {
+                HStack(spacing: 6) {
+                    identity
+                    Spacer()
+                    pinButton
+                }
+                .contentShape(Rectangle())
+                .modifier(PinDrag(enabled: pinned, id: app.id, dragging: $dragging))
+                volume
+            }
+        }
+    }
+
+    private var identity: some View {
+        HStack(spacing: 6) {
+            if pinned {
+                Image(systemName: "line.3.horizontal")
+                    .font(.system(size: 9, weight: .semibold))
+                    .foregroundStyle(.tertiary)
+                    .opacity(hover ? 1 : 0)
+                    .help("Sıralamak için sürükleyin")
+            }
+            if prefs.showAppIcons, let icon = app.icon {
+                Image(nsImage: icon).resizable().frame(width: 18, height: 18)
+            }
+            Text(app.name).lineLimit(1).truncationMode(.tail)
+            if app.isPlaying {
+                Image(systemName: "waveform").font(.caption2).foregroundStyle(.green)
+                    .help("Şu an ses çalıyor")
+            }
+        }
+    }
+
+    private var volume: some View {
+        VolumeControl(icon: "speaker.wave.2.fill", mutedIcon: "speaker.slash.fill",
+                      volume: $app.volume, muted: $app.muted)
+    }
+
+    private var pinButton: some View {
+        Button { withAnimation(.snappy(duration: 0.2)) { controller.togglePin(app.id) } } label: {
+            Image(systemName: pinned ? "pin.fill" : "pin")
+                .font(.system(size: 10, weight: .semibold))
+                .rotationEffect(.degrees(45))
+                .foregroundStyle(pinned ? Color.accentColor : Color.secondary)
+                .frame(width: 18, height: 18)
+                .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .opacity(pinned || hover ? 1 : 0)
+        .help(pinned ? "Sabitlemeyi kaldır" : "Üste sabitle")
     }
 }
 
@@ -344,6 +407,7 @@ struct PinDropDelegate: DropDelegate {
 }
 
 struct VolumeControl: View {
+    @ObservedObject private var prefs = Prefs.shared
     let icon: String
     let mutedIcon: String
     @Binding var volume: Float
@@ -362,10 +426,12 @@ struct VolumeControl: View {
             Slider(value: $volume, in: 0...1)
                 .controlSize(.small)
 
-            Text("\(Int((volume * 100).rounded()))%")
-                .font(.caption.monospacedDigit())
-                .foregroundStyle(muted ? .secondary : .primary)
-                .frame(width: 36, alignment: .trailing)
+            if prefs.showPercent {
+                Text("\(Int((volume * 100).rounded()))%")
+                    .font(.caption.monospacedDigit())
+                    .foregroundStyle(muted ? .secondary : .primary)
+                    .frame(width: 36, alignment: .trailing)
+            }
         }
     }
 }

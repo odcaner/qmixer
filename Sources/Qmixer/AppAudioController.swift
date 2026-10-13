@@ -9,6 +9,9 @@ final class AppAudio: ObservableObject, Identifiable {
     @Published private(set) var name: String
     @Published private(set) var icon: NSImage?
     @Published private(set) var isPlaying = false
+    /// "Sadece çalanlar" filtresinde satırlar her sessizlikte kaybolmasın diye kısa bir tolerans.
+    private(set) var lastPlayed: Date?
+    var recentlyPlaying: Bool { isPlaying || (lastPlayed.map { Date().timeIntervalSince($0) < 15 } ?? false) }
     @Published var volume: Float = 1 { didSet { apply(); Settings.save(self) } }
     @Published var muted = false { didSet { apply(); Settings.save(self) } }
     @Published private(set) var error: String?
@@ -27,6 +30,7 @@ final class AppAudio: ObservableObject, Identifiable {
         if self.name != name { self.name = name }
         if self.icon == nil, let icon { self.icon = icon }
         if self.isPlaying != isPlaying { self.isPlaying = isPlaying }
+        if isPlaying { lastPlayed = Date() }
         let changed = self.processObjects != processObjects || self.outputUID != outputUID
         self.processObjects = processObjects
         self.outputUID = outputUID
@@ -77,6 +81,9 @@ final class AppAudioController: ObservableObject {
         self.devices = devices
         refresh()
         CA.listen(.system, propAddr(kAudioHardwarePropertyProcessObjectList)) { [weak self] in self?.refresh() }
+        Prefs.shared.objectWillChange
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.refresh() } }
+            .store(in: &cancellables)
         devices.$defaultOutput.removeDuplicates().dropFirst()
             .sink { [weak self] _ in DispatchQueue.main.async { self?.refresh() } }
             .store(in: &cancellables)
@@ -119,16 +126,24 @@ final class AppAudioController: ObservableObject {
             app.stop()
         }
 
+        present = visible
         publish(visible)
     }
 
-    /// Sabitlenenler kendi sıralarıyla üstte; diğerleri önce çalanlar, sonra ada göre.
+    /// Şu an ses oturumu olan tüm uygulamalar (gizlenenler dahil).
+    private var present: [AppAudio] = []
+
+    /// Sabitlenenler kendi sıralarıyla üstte; diğerleri tercihe göre sıralanır ve süzülür.
     private func publish(_ visible: [AppAudio]) {
-        let pinnedVisible = pinned.compactMap { id in visible.first { $0.id == id } }
-        let others = visible.filter { !pinned.contains($0.id) }.sorted {
-            if $0.isPlaying != $1.isPlaying { return $0.isPlaying }
-            return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
-        }
+        let prefs = Prefs.shared
+        let shown = visible.filter { !prefs.hiddenApps.contains($0.id) }
+        let pinnedVisible = pinned.compactMap { id in shown.first { $0.id == id } }
+        let others = shown
+            .filter { !pinned.contains($0.id) && (!prefs.onlyPlaying || $0.recentlyPlaying) }
+            .sorted {
+                if prefs.appSort == .playingFirst, $0.isPlaying != $1.isPlaying { return $0.isPlaying }
+                return $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending
+            }
         let ordered = pinnedVisible + others
         if ordered.map(\.id) != apps.map(\.id) { apps = ordered }
     }
@@ -161,9 +176,30 @@ final class AppAudioController: ObservableObject {
         movePinned(id, to: visible[i + delta])
     }
 
+    func setPinned(_ ids: [String]) {
+        pinned = ids
+        savePinned()
+    }
+
+    /// Listeden gizler (sabitlemeyi de kaldırır). Ses ayarı uygulanmaya devam eder.
+    func hide(_ id: String) {
+        pinned.removeAll { $0 == id }
+        UserDefaults.standard.set(pinned, forKey: "pinnedApps")
+        if !Prefs.shared.hiddenApps.contains(id) { Prefs.shared.hiddenApps.append(id) }
+    }
+
+    /// Kayıtlı ses/sessiz ayarlarını siler ve çalışan uygulamaları %100'e döndürür.
+    func resetVolumes() {
+        UserDefaults.standard.removeObject(forKey: "appSettings")
+        for app in store.values {
+            app.muted = false
+            app.volume = 1
+        }
+    }
+
     private func savePinned() {
         UserDefaults.standard.set(pinned, forKey: "pinnedApps")
-        publish(apps)
+        publish(present)
     }
 
     // MARK: - Süreç → uygulama
