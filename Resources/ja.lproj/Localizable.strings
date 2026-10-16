@@ -58,10 +58,7 @@
 "Sıfırla" = "リセット";
 "Görünüm ayarları" = "外観の設定";
 "Varsayılana döndür" = "デフォルトに戻す";
-"Uygulama ses seviyeleri" = "アプリの音量";
-"Tümünü %100 yap…" = "すべて100%にする…";
 "Sürüm" = "バージョン";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "すべてのアプリの保存済み音量と消音設定を削除しますか？";
 "Paneldeki bölümler" = "パネルのセクション";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "矢印またはドラッグで並べ替えます。オフにしたセクションはパネルに表示されません。";
 "Boyut" = "サイズ";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "未接続の非表示デバイス";
 "Listede göster" = "リストに表示";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "オフにしたデバイスはパネルのデバイスリストに表示されません（選択中の場合を除く）。";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "出力：デフォルト";
+"Çıkış: %@" = "出力：%@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ は接続されていません。デフォルトの出力を使用中";
+"Varsayılan (%@)" = "デフォルト（%@）";
+"%@ (bağlı değil)" = "%@（未接続）";
+"Uygulama ses ve çıkış ayarları" = "アプリの音量と出力設定";
+"Sıfırla…" = "リセット…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "すべてのアプリを音量100%とデフォルトの出力に戻しますか？";

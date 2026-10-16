@@ -58,10 +58,7 @@
 "Sıfırla" = "Сбросить";
 "Görünüm ayarları" = "Настройки оформления";
 "Varsayılana döndür" = "Восстановить по умолчанию";
-"Uygulama ses seviyeleri" = "Громкость приложений";
-"Tümünü %100 yap…" = "Сбросить всё на 100 %…";
 "Sürüm" = "Версия";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "Удалить сохранённые настройки громкости и отключения звука для всех приложений?";
 "Paneldeki bölümler" = "Разделы панели";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "Меняйте порядок стрелками или перетаскиванием; выключенные разделы скрываются с панели.";
 "Boyut" = "Размер";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "Скрытые неподключённые устройства";
 "Listede göster" = "Показывать в списке";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "Выключенные устройства скрываются из списка на панели (если не выбраны сейчас).";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "Выход: по умолчанию";
+"Çıkış: %@" = "Выход: %@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ не подключено; используется выход по умолчанию";
+"Varsayılan (%@)" = "По умолчанию (%@)";
+"%@ (bağlı değil)" = "%@ (не подключено)";
+"Uygulama ses ve çıkış ayarları" = "Громкость и выход приложений";
+"Sıfırla…" = "Сбросить…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "Вернуть всем приложениям громкость 100 % и выход по умолчанию?";

@@ -58,10 +58,7 @@
 "Sıfırla" = "Réinitialiser";
 "Görünüm ayarları" = "Réglages d’apparence";
 "Varsayılana döndür" = "Rétablir les valeurs par défaut";
-"Uygulama ses seviyeleri" = "Volumes des apps";
-"Tümünü %100 yap…" = "Tout remettre à 100 %…";
 "Sürüm" = "Version";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "Supprimer les réglages de volume et de sourdine enregistrés pour toutes les apps ?";
 "Paneldeki bölümler" = "Sections du panneau";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "Réordonnez avec les flèches ou en faisant glisser ; les sections désactivées sont masquées.";
 "Boyut" = "Taille";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "Appareils masqués non connectés";
 "Listede göster" = "Afficher dans la liste";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "Les appareils désactivés sont masqués de la liste du panneau (sauf s’ils sont sélectionnés).";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "Sortie : par défaut";
+"Çıkış: %@" = "Sortie : %@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ n’est pas connecté ; sortie par défaut utilisée";
+"Varsayılan (%@)" = "Par défaut (%@)";
+"%@ (bağlı değil)" = "%@ (non connecté)";
+"Uygulama ses ve çıkış ayarları" = "Volume et sortie des apps";
+"Sıfırla…" = "Réinitialiser…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "Remettre toutes les apps à 100 % et sur la sortie par défaut ?";

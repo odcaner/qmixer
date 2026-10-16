@@ -297,6 +297,8 @@ struct AppRow: View {
                 Button("Aşağı taşı") { withAnimation { controller.movePinned(app.id, by: 1) } }
             }
             Divider()
+            Menu("Çıkış") { outputPicker }
+            Divider()
             ForEach(VolumeSlider.stops, id: \.self) { stop in
                 Button(String(format: L("Ses %@"), percentText(Int(stop * 100)))) {
                     app.volume = stop
@@ -318,6 +320,7 @@ struct AppRow: View {
                     .contentShape(Rectangle())
                     .modifier(PinDrag(enabled: pinned, id: app.id, dragging: $dragging))
                 volume
+                outputButton
                 pinButton
             }
         } else {
@@ -325,6 +328,7 @@ struct AppRow: View {
                 HStack(spacing: 6) {
                     identity
                     Spacer()
+                    outputButton
                     pinButton
                 }
                 .contentShape(Rectangle())
@@ -351,7 +355,76 @@ struct AppRow: View {
                 Image(systemName: "waveform").font(.caption2).foregroundStyle(.green)
                     .help("Şu an ses çalıyor")
             }
+            if !prefs.compactRows, app.isRouted || app.outputMissing, let name = outputName {
+                Text(name)
+                    .font(.caption2)
+                    .foregroundStyle(app.outputMissing ? Color.orange : Color.secondary)
+                    .lineLimit(1)
+                    .layoutPriority(-1)
+            }
         }
+    }
+
+    // MARK: Çıkış cihazı
+
+    private var devices: DeviceController { controller.devices }
+
+    /// Seçilen cihazın adı (bağlı değilse kayıtlı adı).
+    private var outputName: String? {
+        guard let uid = app.outputDevice else { return nil }
+        return devices.outputs.first { $0.uid == uid }?.name ?? app.outputDeviceName ?? uid
+    }
+
+    private var outputSymbol: String {
+        if app.outputMissing { return "exclamationmark.triangle.fill" }
+        if app.isRouted, let d = devices.outputs.first(where: { $0.uid == app.outputDevice }) {
+            return NSImage(systemSymbolName: d.symbol, accessibilityDescription: nil) != nil ? d.symbol : "hifispeaker"
+        }
+        return "hifispeaker"
+    }
+
+    private var outputHelp: String {
+        guard let name = outputName else { return L("Çıkış: varsayılan") }
+        return String(format: L(app.outputMissing ? "%@ bağlı değil; varsayılan çıkış kullanılıyor" : "Çıkış: %@"), name)
+    }
+
+    @ViewBuilder
+    private var outputPicker: some View {
+        let def = devices.outputs.first { $0.id == devices.defaultOutput }
+        Picker("Çıkış", selection: Binding(
+            get: { app.outputDevice ?? "" },
+            set: { uid in
+                app.outputDeviceName = devices.outputs.first { $0.uid == uid }?.name
+                app.outputDevice = uid.isEmpty ? nil : uid
+            })) {
+            Text(String(format: L("Varsayılan (%@)"), def?.name ?? "-")).tag("")
+            Divider()
+            ForEach(devices.outputs.filter { prefs.hiddenDevices[$0.uid] == nil || $0.uid == app.outputDevice }) { d in
+                Text(d.name).tag(d.uid)
+            }
+            if app.outputMissing, let uid = app.outputDevice {
+                Text(String(format: L("%@ (bağlı değil)"), outputName ?? uid)).tag(uid)
+            }
+        }
+        .pickerStyle(.inline)
+        .labelsHidden()
+    }
+
+    private var outputButton: some View {
+        // Menü etiketi foregroundStyle'ı yok saydığı için renk simgenin kendisine işlenir.
+        let color: NSColor = app.outputMissing ? .systemOrange : app.isRouted ? .controlAccentColor : .secondaryLabelColor
+        let config = NSImage.SymbolConfiguration(pointSize: 11, weight: .semibold)
+            .applying(NSImage.SymbolConfiguration(paletteColors: app.outputMissing ? [.white, color] : [color]))
+        let image = NSImage(systemSymbolName: outputSymbol, accessibilityDescription: nil)?.withSymbolConfiguration(config)
+        return Menu { outputPicker } label: {
+            Image(nsImage: image ?? NSImage())
+        }
+        .menuStyle(.borderlessButton)
+        .menuIndicator(.hidden)
+        .fixedSize()
+        .frame(width: 22, height: 18)
+        .opacity(app.isRouted || app.outputMissing || hover ? 1 : 0)
+        .help(outputHelp)
     }
 
     private var volume: some View {

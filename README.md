@@ -4,6 +4,7 @@ macOS menü çubuğu ses mikseri: her uygulamanın sesini ayrı ayrı kısın ve
 giriş/çıkış cihazlarını tek yerden yönetin.
 
 - Uygulama başına ses seviyesi ve sessiz (ayarlar kalıcı)
+- Uygulama başına çıkış cihazı: ör. Firefox kulaklıktan, Spotify hoparlörden
 - %25 / %50 / %75 / %100 dilimli, dilimlere yapışan kaydırıcılar (⌥ ile serbest)
 - Uygulamaları üste sabitleme, sürükle-bırak ile sıralama, listeden gizleme
 - Çıkış/giriş cihazı seçimi (Denetim Merkezi tarzı), cihaz sesi ve sessiz
@@ -42,11 +43,12 @@ Test için: `open -n dist/Qmixer.app --args -AppleLanguages "(ja)" --panel` (vey
 
 ## Nasıl çalışır
 
-Ses seviyesi %100'den farklı (veya sessiz) olan her uygulama için:
+Ses seviyesi %100'den farklı, sessiz ya da başka bir çıkışa yönlendirilmiş her uygulama için:
 
 ```
-uygulama süreçleri ─► CATap (mutedWhenTapped) ─► özel aggregate cihaz ─► IOProc (× kazanç) ─► varsayılan çıkış
+uygulama süreçleri ─► CATap (mutedWhenTapped) ─► özel aggregate cihaz ─► IOProc (× kazanç) ─► seçilen (veya varsayılan) çıkış
 ```
 
-%100'deki uygulamaların sesine hiç dokunulmaz. Yardımcı süreçler (Chrome Helper, Safari WebContent)
+%100'de ve varsayılan çıkıştaki uygulamaların sesine hiç dokunulmaz. Seçilen cihaz bağlı değilse
+ses varsayılan çıkışa düşer; cihaz geri gelince otomatik ona döner. Yardımcı süreçler (Chrome Helper, Safari WebContent)
 "sorumlu" uygulamaya göre gruplanır.

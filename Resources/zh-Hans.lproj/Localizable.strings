@@ -58,10 +58,7 @@
 "Sıfırla" = "重置";
 "Görünüm ayarları" = "外观设置";
 "Varsayılana döndür" = "恢复默认";
-"Uygulama ses seviyeleri" = "应用音量";
-"Tümünü %100 yap…" = "全部设为 100%…";
 "Sürüm" = "版本";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "要删除所有应用已保存的音量和静音设置吗？";
 "Paneldeki bölümler" = "面板分区";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "使用箭头或拖动来调整顺序；关闭的分区不会显示在面板中。";
 "Boyut" = "尺寸";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "未连接的隐藏设备";
 "Listede göster" = "在列表中显示";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "关闭的设备不会显示在面板的设备列表中（当前选中的除外）。";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "输出：默认";
+"Çıkış: %@" = "输出：%@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ 未连接；正在使用默认输出";
+"Varsayılan (%@)" = "默认（%@）";
+"%@ (bağlı değil)" = "%@（未连接）";
+"Uygulama ses ve çıkış ayarları" = "应用音量和输出设置";
+"Sıfırla…" = "重置…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "将所有应用恢复为 100% 音量和默认输出？";

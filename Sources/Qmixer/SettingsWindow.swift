@@ -119,9 +119,9 @@ private struct GeneralTab: View {
                     Button("Varsayılana döndür") { prefs.resetAppearance() }
                 }
                 HStack {
-                    Text("Uygulama ses seviyeleri")
+                    Text("Uygulama ses ve çıkış ayarları")
                     Spacer()
-                    Button(L("Tümünü %100 yap…")) { confirmReset.v = true }
+                    Button("Sıfırla…") { confirmReset.v = true }
                 }
             }
 
@@ -131,7 +131,7 @@ private struct GeneralTab: View {
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?",
+        .confirmationDialog(Text(L("Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?")),
                             isPresented: $confirmReset.v) {
             Button("Sıfırla", role: .destructive) { apps.resetVolumes() }
         }

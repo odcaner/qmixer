@@ -58,10 +58,7 @@
 "Sıfırla" = "Reset";
 "Görünüm ayarları" = "Appearance settings";
 "Varsayılana döndür" = "Restore defaults";
-"Uygulama ses seviyeleri" = "App volume levels";
-"Tümünü %100 yap…" = "Set all to 100%…";
 "Sürüm" = "Version";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "Delete the saved volume and mute settings for all apps?";
 "Paneldeki bölümler" = "Panel sections";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "Reorder with the arrows or by dragging; sections you turn off are hidden from the panel.";
 "Boyut" = "Size";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "Hidden devices not connected";
 "Listede göster" = "Show in list";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "Devices you turn off are hidden from the panel’s device list (unless currently selected).";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "Output: default";
+"Çıkış: %@" = "Output: %@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ is not connected; using the default output";
+"Varsayılan (%@)" = "Default (%@)";
+"%@ (bağlı değil)" = "%@ (not connected)";
+"Uygulama ses ve çıkış ayarları" = "App volume and output settings";
+"Sıfırla…" = "Reset…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "Return all apps to 100% volume and the default output?";

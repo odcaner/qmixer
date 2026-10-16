@@ -58,10 +58,7 @@
 "Sıfırla" = "Restablecer";
 "Görünüm ayarları" = "Ajustes de apariencia";
 "Varsayılana döndür" = "Restaurar valores predeterminados";
-"Uygulama ses seviyeleri" = "Volumen de las aplicaciones";
-"Tümünü %100 yap…" = "Poner todo al 100 %…";
 "Sürüm" = "Versión";
-"Tüm uygulamaların kayıtlı ses seviyesi ve sessiz ayarı silinsin mi?" = "¿Eliminar el volumen y silencio guardados de todas las aplicaciones?";
 "Paneldeki bölümler" = "Secciones del panel";
 "Sırayı oklarla veya sürükleyerek değiştirin; kapattığınız bölüm panelde görünmez." = "Reordena con las flechas o arrastrando; las secciones desactivadas no aparecen en el panel.";
 "Boyut" = "Tamaño";
@@ -92,3 +89,13 @@
 "Bağlı olmayan gizli cihazlar" = "Dispositivos ocultos no conectados";
 "Listede göster" = "Mostrar en la lista";
 "Kapattığınız cihaz panelin cihaz listesinde görünmez (seçiliyse görünmeye devam eder)." = "Los dispositivos desactivados no aparecen en la lista del panel (salvo si están seleccionados).";
+
+/* Uygulamaya özel çıkış */
+"Çıkış: varsayılan" = "Salida: predeterminada";
+"Çıkış: %@" = "Salida: %@";
+"%@ bağlı değil; varsayılan çıkış kullanılıyor" = "%@ no está conectado; se usa la salida predeterminada";
+"Varsayılan (%@)" = "Predeterminada (%@)";
+"%@ (bağlı değil)" = "%@ (no conectado)";
+"Uygulama ses ve çıkış ayarları" = "Volumen y salida de las apps";
+"Sıfırla…" = "Restablecer…";
+"Tüm uygulamalar %100 sese ve varsayılan çıkışa dönsün mü?" = "¿Devolver todas las apps al 100 % de volumen y a la salida predeterminada?";

@@ -14,10 +14,16 @@ final class AppAudio: ObservableObject, Identifiable {
     var recentlyPlaying: Bool { isPlaying || (lastPlayed.map { Date().timeIntervalSince($0) < 15 } ?? false) }
     @Published var volume: Float = 1 { didSet { apply(); Settings.save(self) } }
     @Published var muted = false { didSet { apply(); Settings.save(self) } }
+    /// Uygulamaya özel çıkış cihazı (UID). nil = sistemin varsayılan çıkışı.
+    @Published var outputDevice: String? { didSet { apply(); Settings.save(self) } }
+    /// Cihaz bağlı değilken de adını gösterebilmek için.
+    var outputDeviceName: String?
     @Published private(set) var error: String?
 
     fileprivate(set) var processObjects: [AudioObjectID] = []
-    fileprivate var outputUID: String?
+    /// Sistemin varsayılan çıkışı ve bağlı çıkış cihazları (controller günceller).
+    fileprivate var defaultUID: String?
+    fileprivate var connectedUIDs: Set<String> = []
     private var tap: ProcessTap?
 
     init(id: String, name: String, icon: NSImage?) {
@@ -26,14 +32,28 @@ final class AppAudio: ObservableObject, Identifiable {
         self.icon = icon
     }
 
-    fileprivate func update(name: String, icon: NSImage?, processObjects: [AudioObjectID], isPlaying: Bool, outputUID: String?) {
+    /// Seçilen cihaz bağlı değilse varsayılana düşer.
+    var effectiveOutput: String? {
+        if let outputDevice, connectedUIDs.contains(outputDevice) { return outputDevice }
+        return defaultUID
+    }
+    /// Ses varsayılandan farklı bir cihaza yönlendiriliyor.
+    var isRouted: Bool { effectiveOutput != nil && effectiveOutput != defaultUID }
+    /// Seçilen cihaz şu an bağlı değil.
+    var outputMissing: Bool { outputDevice.map { !connectedUIDs.contains($0) } ?? false }
+
+    fileprivate func update(name: String, icon: NSImage?, processObjects: [AudioObjectID], isPlaying: Bool,
+                            defaultUID: String?, connectedUIDs: Set<String>) {
         if self.name != name { self.name = name }
         if self.icon == nil, let icon { self.icon = icon }
         if self.isPlaying != isPlaying { self.isPlaying = isPlaying }
         if isPlaying { lastPlayed = Date() }
-        let changed = self.processObjects != processObjects || self.outputUID != outputUID
+        let changed = self.processObjects != processObjects || self.defaultUID != defaultUID
+            || self.connectedUIDs != connectedUIDs
+        if self.connectedUIDs != connectedUIDs || self.defaultUID != defaultUID { objectWillChange.send() }
         self.processObjects = processObjects
-        self.outputUID = outputUID
+        self.defaultUID = defaultUID
+        self.connectedUIDs = connectedUIDs
         if changed { apply() }
     }
 
@@ -42,10 +62,10 @@ final class AppAudio: ObservableObject, Identifiable {
         processObjects = []
     }
 
-    /// %100 ve sessiz değilse tap tutmayız: uygulamanın sesine hiç dokunulmaz.
+    /// %100, sesli ve varsayılan çıkışta ise tap tutmayız: uygulamanın sesine hiç dokunulmaz.
     func apply() {
         let g: Float = muted ? 0 : volume
-        guard g < 0.999, !processObjects.isEmpty, let outputUID else {
+        guard g < 0.999 || isRouted, !processObjects.isEmpty, let outputUID = effectiveOutput else {
             tap = nil
             error = nil
             return
@@ -73,13 +93,16 @@ final class AppAudioController: ObservableObject {
 
     /// Uygulama kapanıp açılınca ayarlar korunsun diye kaybolanları da tutarız.
     private var store: [String: AppAudio] = [:]
-    private let devices: DeviceController
+    let devices: DeviceController
     private var timer: Timer?
     private var cancellables = Set<AnyCancellable>()
 
     init(devices: DeviceController) {
         self.devices = devices
         refresh()
+        devices.$outputs.map { $0.map(\.uid) }.removeDuplicates().dropFirst()
+            .sink { [weak self] _ in DispatchQueue.main.async { self?.refresh() } }
+            .store(in: &cancellables)
         CA.listen(.system, propAddr(kAudioHardwarePropertyProcessObjectList)) { [weak self] in self?.refresh() }
         Prefs.shared.objectWillChange
             .sink { [weak self] _ in DispatchQueue.main.async { self?.refresh() } }
@@ -94,7 +117,8 @@ final class AppAudioController: ObservableObject {
     }
 
     func refresh() {
-        let outputUID = devices.defaultOutputUID
+        let defaultUID = devices.defaultOutputUID
+        let connected = Set(devices.outputs.map(\.uid))
         let myPID = ProcessInfo.processInfo.processIdentifier
         let objects: [AudioObjectID] = CA.array(.system, propAddr(kAudioHardwarePropertyProcessObjectList))
 
@@ -119,7 +143,7 @@ final class AppAudioController: ObservableObject {
             let app = store[key] ?? Settings.load(AppAudio(id: key, name: g.name, icon: g.app?.icon))
             store[key] = app
             app.update(name: g.name, icon: g.app?.icon, processObjects: g.objects.sorted(),
-                       isPlaying: g.playing, outputUID: outputUID)
+                       isPlaying: g.playing, defaultUID: defaultUID, connectedUIDs: connected)
             visible.append(app)
         }
         for (key, app) in store where groups[key] == nil && !app.processObjects.isEmpty {
@@ -188,12 +212,13 @@ final class AppAudioController: ObservableObject {
         if !Prefs.shared.hiddenApps.contains(id) { Prefs.shared.hiddenApps.append(id) }
     }
 
-    /// Kayıtlı ses/sessiz ayarlarını siler ve çalışan uygulamaları %100'e döndürür.
+    /// Kayıtlı ses/sessiz/çıkış ayarlarını siler; uygulamalar %100 ve varsayılan çıkışa döner.
     func resetVolumes() {
         UserDefaults.standard.removeObject(forKey: "appSettings")
         for app in store.values {
             app.muted = false
             app.volume = 1
+            app.outputDevice = nil
         }
     }
 
@@ -220,7 +245,7 @@ final class AppAudioController: ObservableObject {
     }
 }
 
-/// Uygulama başına ses/sessiz ayarı; yalnızca varsayılandan (%100, sesli) farklı olanlar saklanır.
+/// Uygulama başına ses/sessiz/çıkış ayarı; yalnızca varsayılandan farklı olanlar saklanır.
 @MainActor
 enum Settings {
     private static let key = "appSettings"
@@ -231,6 +256,8 @@ enum Settings {
         loading = true
         app.volume = (s["volume"] as? Double).map(Float.init) ?? 1
         app.muted = s["muted"] as? Bool ?? false
+        app.outputDeviceName = s["outputName"] as? String
+        app.outputDevice = s["output"] as? String
         loading = false
         return app
     }
@@ -238,10 +265,15 @@ enum Settings {
     static func save(_ app: AppAudio) {
         guard !loading else { return }
         var all = UserDefaults.standard.dictionary(forKey: key) ?? [:]
-        if app.volume >= 0.999 && !app.muted {
+        if app.volume >= 0.999 && !app.muted && app.outputDevice == nil {
             all[app.id] = nil
         } else {
-            all[app.id] = ["volume": Double(app.volume), "muted": app.muted]
+            var s: [String: Any] = ["volume": Double(app.volume), "muted": app.muted]
+            if let output = app.outputDevice {
+                s["output"] = output
+                s["outputName"] = app.outputDeviceName
+            }
+            all[app.id] = s
         }
         UserDefaults.standard.set(all, forKey: key)
     }
